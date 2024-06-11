@@ -13,6 +13,10 @@ module Wordmove
           options = movefile.fetch.merge! cli_options
           environment = movefile.environment(cli_options)
 
+          # localとenvironmentのdatabaseにoriginを追加
+          options[:local][:database][:origin] = 'local'
+          options[environment][:database][:origin] = 'remote'
+
           return FTP.new(environment, options) if options[environment][:ftp]
 
           if options[environment][:ssh] && options[:global][:sql_adapter] == 'wpcli'
@@ -142,7 +146,19 @@ module Wordmove
       end
 
       def mysql_import_command(dump_path, options)
-        command = ["tail -n +2 #{Shellwords.escape(dump_path)} | mysql"]
+        if options[:origin] == 'local'
+          # ファイルの最初の行を読み取る
+          first_line = File.open(dump_path, &:readline).strip
+
+          # コマンドを構築
+          if first_line == '/*!999999\\- enable the sandbox mode */'
+            command = ["tail -n +2 #{Shellwords.escape(dump_path)} | mysql"]
+          else
+            command = ["mysql"]
+          end
+        else
+          command = ["mysql"]
+        end
         command << "--host=#{Shellwords.escape(options[:host])}" if options[:host].present?
         command << "--port=#{Shellwords.escape(options[:port])}" if options[:port].present?
         command << "--user=#{Shellwords.escape(options[:user])}" if options[:user].present?
@@ -151,6 +167,11 @@ module Wordmove
         end
         command << "--database=#{Shellwords.escape(options[:name])}"
         command << Shellwords.split(options[:mysql_options]) if options[:mysql_options].present?
+
+        # 通常のコマンド実行時のみ --execute オプションを追加
+        unless first_line == '/*!999999\\- enable the sandbox mode */'
+          command << "--execute=\"SET autocommit=0; SOURCE #{Shellwords.escape(dump_path)}; COMMIT\""
+        end
         command.join(" ")
       end
 
