@@ -17,6 +17,7 @@ module Wordmove
 
         opts = [
           "--path=#{cli_config_path}",
+          # "--path=#{@local_path}",
           from,
           to,
           "--quiet",
@@ -46,7 +47,7 @@ module Wordmove
       end
 
       def load_from_cli
-        cli_config = JSON.parse(`wp cli param-dump --with-values`, symbolize_names: true)
+        cli_config = JSON.parse(`wp cli param-dump --allow-root --with-values`, symbolize_names: true)
         cli_config.dig(:path, :current)
       end
     end
