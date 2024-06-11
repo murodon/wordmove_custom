@@ -1,5 +1,3 @@
-require 'shellwords'
-
 module Wordmove
   module Deployer
     class Base
@@ -144,19 +142,7 @@ module Wordmove
       end
 
       def mysql_import_command(dump_path, options)
-        # 一時ファイルを作成
-        temp_file = "#{dump_path}.tmp"
-      
-        # ファイルを読み込んで1行目が特定のコメントなら削除
-        File.open(temp_file, 'w') do |output|
-          File.foreach(dump_path).with_index do |line, line_num|
-            # 1行目が指定のコメントであればスキップ
-            output.puts(line) unless line_num == 0 && line.strip == '/*!999999\- enable the sandbox mode */'
-          end
-        end
-      
-        # MySQLコマンドを構築
-        command = ["mysql"]
+        command = ["tail -n +2 #{Shellwords.escape(dump_path)} | mysql"]
         command << "--host=#{Shellwords.escape(options[:host])}" if options[:host].present?
         command << "--port=#{Shellwords.escape(options[:port])}" if options[:port].present?
         command << "--user=#{Shellwords.escape(options[:user])}" if options[:user].present?
@@ -165,13 +151,7 @@ module Wordmove
         end
         command << "--database=#{Shellwords.escape(options[:name])}"
         command << Shellwords.split(options[:mysql_options]) if options[:mysql_options].present?
-        command << "< #{Shellwords.escape(temp_file)}"
-        command_string = command.join(" ")
-      
-        # 一時ファイルを削除するフックを追加
-        at_exit { File.delete(temp_file) if File.exist?(temp_file) }
-      
-        command_string
+        command.join(" ")
       end
 
       def compress_command(path)
