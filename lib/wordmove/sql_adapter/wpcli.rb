@@ -16,7 +16,8 @@ module Wordmove
         end
 
         opts = [
-          "--path=#{cli_config_path}",
+          # "--path=#{cli_config_path}",
+          "--path=#{@local_path}",
           from,
           to,
           "--quiet",
