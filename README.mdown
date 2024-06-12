@@ -1,3 +1,18 @@
+# Wordmove_Custom
+
+Dockerコンテナ内でデータベースの同期時に発生するwpコマンドのエラー解消とMaria DBの特定のバージョンでDump Fileの1行目に新しくSandbox Modeが入る場合にローカル側でスキップするようにカスタマイズされたものです。
+
+/*!999999\- enable the sandbox mode */
+
+gemへ未公開なためspecific_installを利用しています。
+
+```
+gem install specific_install
+gem specific_install https://github.com/murodon/wordmove_custom.git kusanagi
+```
+
+その他は本家の利用方法をご参照ください。
+
 # Wordmove
 
 ![logo](https://raw.githubusercontent.com/welaika/wordmove/master/assets/images/wordmove.png)
